@@ -4,7 +4,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 
 
 options = webdriver.ChromeOptions()
-#options.add_argument("headless")
+options.add_argument("headless")
 
 driver = webdriver.Chrome(options=options)
 
