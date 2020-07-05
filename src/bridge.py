@@ -4,9 +4,16 @@ from selenium.common.exceptions import StaleElementReferenceException
 
 
 options = webdriver.ChromeOptions()
-options.add_argument("headless")
+#options.add_argument("headless")
 
 driver = webdriver.Chrome(options=options)
+
+def get_element(driver: webdriver.Chrome, css_selector: str) -> webdriver.remote.webelement.WebElement:
+    while True:
+        try:
+            return driver.find_element_by_css_selector(css_selector)
+        except:
+            pass
 
 def read_story(driver: webdriver.Chrome) -> str:
     while True:
@@ -15,7 +22,7 @@ def read_story(driver: webdriver.Chrome) -> str:
             # This is useful when first entering the game, mostly.
             while True:
                 try:        
-                    story_element = driver.find_element_by_css_selector("span[typinganimationduration]")
+                    story_element = get_element(driver, "span[typinganimationduration]")
                     break
                 except:
                     pass
@@ -43,30 +50,20 @@ def read_story(driver: webdriver.Chrome) -> str:
                         return story
                 except:
                     continue
-        except StaleElementReferenceException:
+        except:
             continue
 
 def send_command(driver: webdriver.Chrome, command: str):
     # Type command into textbox.
-    driver.find_element_by_css_selector("textarea").send_keys(command)
+    get_element(driver, "textarea").send_keys(command)
     # Submit command.
-    driver.find_element_by_css_selector("div[aria-label='Submit']").click()
+    get_element(driver, "div[aria-label='Submit']").click()
 
 try:
     driver.get(r"https://play.aidungeon.io/")
 
-    while True:
-        try:
-            driver.find_element_by_css_selector("div[aria-label='Play']").click()
-            break
-        except:
-            pass
-    while True:
-        try:
-            driver.find_element_by_css_selector("div[aria-label='New Singleplayer Game']").click()
-            break
-        except:
-            pass
+    get_element(driver, "div[aria-label='Play']").click()
+    get_element(driver, "div[aria-label='New Singleplayer Game']").click()
     
     print(read_story(driver)) # Read setting selection menu.
     send_command(driver, "1")
@@ -75,7 +72,13 @@ try:
     print(read_story(driver)) # Read character name prompt.
     send_command(driver, "John Hancock")
     print(read_story(driver)) # Read "Generating story...".
+    
+    # Click off the "New Quest" dialog.
+    action = webdriver.common.action_chains.ActionChains(driver)
+    action.move_to_element_with_offset(driver.find_element_by_tag_name("body"), 0, 0).click().perform()
+
     print(read_story(driver))
+    input()
 finally:
     try:
         driver.close()
